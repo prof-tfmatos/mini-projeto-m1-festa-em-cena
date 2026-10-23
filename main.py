@@ -60,3 +60,37 @@ for registro in registros:
 
 print("canais padronizados:", padronizados)    # alvo: 45
 print("canais desconhecidos:", desconhecidos)  # alvo: 0
+
+# peça 8: quantidade (inteiro > 0) e preço (preenchido, >= 0): marcar sem inventar
+qtd_invalidas = 0
+preco_invalidos = 0
+pedidos_com_problema = set()    # {} vazio seria dict
+
+for registro in registros:
+    pedido = registro["pedido_id"]
+
+    # quantidade: falha no int() OU converte mas não é > 0 ("-1" converte sem erro)
+    try:
+        qtd = int(registro["quantidade"])
+        qtd_ok = qtd > 0
+    except ValueError:
+        qtd_ok = False
+    if not qtd_ok:
+        qtd_invalidas += 1
+        pedidos_com_problema.add(pedido)
+
+    # preço: float("") levanta ValueError; negativo converte mas não passa
+    try:
+        preco = float(registro["preco_unitario"])
+        preco_ok = preco >= 0
+    except ValueError:
+        preco_ok = False
+    if not preco_ok:
+        preco_invalidos += 1
+        pedidos_com_problema.add(pedido)
+
+    # o valor original fica como está: nada de trocar por 0 ou média
+
+print("quantidades inválidas:", qtd_invalidas)               # alvo: 7
+print("preços inválidos:", preco_invalidos)                  # alvo: 12
+print("pedidos com problema:", len(pedidos_com_problema))    # alvo: 19
