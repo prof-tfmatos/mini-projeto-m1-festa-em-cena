@@ -1,5 +1,7 @@
-# peça 1: traz a biblioteca
+# peça 1: traz a biblioteca 
 import pandas as pd
+# traz o regex
+import re
 
 # peça 2: lê o CSV numa tabela (DataFrame), tudo como texto
 df = pd.read_csv("halloween_vendas.csv", dtype=str, keep_default_na=False, encoding="utf-8")
@@ -12,3 +14,49 @@ print(df.head(3))
 registros = df.to_dict(orient="records")
 print(len(registros))
 print(registros[0])
+
+# peça 5: limpar a categoria dos 1500 registros e contar
+vazias = 0
+alteradas = 0
+
+for registro in registros:
+    original = registro["categoria"]
+    limpa = original.strip()
+    limpa = limpa.lower()
+    limpa = re.sub(r"[^a-z ]", "", limpa)
+
+    if limpa == "":
+        limpa = "sem categoria"
+        vazias += 1
+    elif limpa != original.lower():    # troca de caixa não conta
+        alteradas += 1
+
+    registro["categoria"] = limpa
+
+print("vazias:", vazias)          # alvo: 18
+print("alteradas:", alteradas)    # alvo: 131
+
+
+# peça 6: padronizar o canal de venda com um dict tradutor
+tradutor = {
+    "mercado": "Mercado",
+    "loja física": "Loja física",
+    "web": "Web",
+}
+padronizados = 0
+desconhecidos = 0
+
+for registro in registros:
+    original = registro["canal_venda"]
+    chave = original.strip().lower()
+
+    if chave in tradutor:
+        novo = tradutor[chave]
+        if novo != original:
+            padronizados += 1
+        registro["canal_venda"] = novo
+    else:
+        desconhecidos += 1
+
+print("canais padronizados:", padronizados)    # alvo: 45
+print("canais desconhecidos:", desconhecidos)  # alvo: 0
