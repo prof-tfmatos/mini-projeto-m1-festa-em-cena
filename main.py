@@ -147,3 +147,23 @@ print("sem entrega:", sem_entrega_cancelado + sem_entrega_outros)    # alvo: 143
 print("cancelados:", sem_entrega_cancelado, "outros:", sem_entrega_outros)    # alvo: 109 e 34
 print("hipótese verdadeira?", hipotese_verdadeira)    # alvo: False
 print("1º contraexemplo:", exemplos[0])    # alvo: ('1170', 'Concluído', '2025-08-19 22:20:19')
+
+# peça 11: pedidos por canal (só canal reconhecido; todos os status entram)
+por_canal = {}
+excluidos_canal = 0
+
+for registro in registros:
+    canal = registro["canal_venda"]
+    if canal in tradutor.values():    # "Mercado", "Loja física", "Web"
+        if canal not in por_canal:
+            por_canal[canal] = 0
+        por_canal[canal] += 1
+    else:
+        excluidos_canal += 1
+
+total = sum(por_canal.values())
+for canal in por_canal:
+    n = por_canal[canal]
+    print(f"{canal}: {n} pedidos ({n / total * 100:.1f}%)")
+print("excluídos por canal desconhecido:", excluidos_canal)
+# alvo: Web 666 (44.4%), Loja física 551 (36.7%), Mercado 283 (18.9%), 0 excluídos
