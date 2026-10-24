@@ -126,3 +126,24 @@ print("datas inválidas:", datas_invalidas)    # alvo: 4
 # um pedido enriquecido: texto original + campos novos
 r = registros[0]
 print(r["data_venda"], "->", r["ano"], r["mes"], r["dia"], r["hora"], r["data_br"], r["ano_mes"])
+
+# peça 10: hipótese "todo pedido sem data_entrega é Cancelado"
+sem_entrega_cancelado = 0
+sem_entrega_outros = 0
+exemplos = []    # contraexemplos: sem entrega e NÃO cancelados
+
+for registro in registros:
+    if registro["data_entrega"].strip() == "":
+        if registro["status_pedido"] == "Cancelado":
+            sem_entrega_cancelado += 1
+        else:
+            sem_entrega_outros += 1
+            exemplos.append((registro["pedido_id"], registro["status_pedido"], registro["data_venda"]))
+
+# "todos" cai com um único contraexemplo
+hipotese_verdadeira = sem_entrega_outros == 0
+
+print("sem entrega:", sem_entrega_cancelado + sem_entrega_outros)    # alvo: 143
+print("cancelados:", sem_entrega_cancelado, "outros:", sem_entrega_outros)    # alvo: 109 e 34
+print("hipótese verdadeira?", hipotese_verdadeira)    # alvo: False
+print("1º contraexemplo:", exemplos[0])    # alvo: ('1170', 'Concluído', '2025-08-19 22:20:19')
