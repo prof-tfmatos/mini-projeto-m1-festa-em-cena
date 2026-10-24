@@ -2,6 +2,8 @@
 import pandas as pd
 # traz o regex
 import re
+# traz a classe datetime do módulo datetime
+from datetime import datetime
 
 # peça 2: lê o CSV numa tabela (DataFrame), tudo como texto
 df = pd.read_csv("halloween_vendas.csv", dtype=str, keep_default_na=False, encoding="utf-8")
@@ -94,3 +96,93 @@ for registro in registros:
 print("quantidades inválidas:", qtd_invalidas)               # alvo: 7
 print("preços inválidos:", preco_invalidos)                  # alvo: 12
 print("pedidos com problema:", len(pedidos_com_problema))    # alvo: 19
+
+
+# peça 9: converter data_venda (texto) em data; inválida é marcada, nunca trocada por now()
+FORMATO_DATA = "%Y-%m-%d %H:%M:%S"    # %m é mês, %M é minuto
+datas_invalidas = 0
+
+for registro in registros:
+    try:
+        dt = datetime.strptime(registro["data_venda"], FORMATO_DATA)
+    except ValueError:
+        dt = None    # "data_invalida" não vira data
+
+    if dt is None:
+        datas_invalidas += 1
+        registro["data_ok"] = False
+    else:
+        # campos novos AO LADO do texto original, que fica como está
+        registro["data_ok"] = True
+        registro["ano"] = dt.year
+        registro["mes"] = dt.month
+        registro["dia"] = dt.day
+        registro["hora"] = dt.hour
+        registro["data_br"] = dt.strftime("%d/%m/%Y")
+        registro["ano_mes"] = dt.strftime("%Y-%m")
+
+print("datas inválidas:", datas_invalidas)    # alvo: 4
+
+# um pedido enriquecido: texto original + campos novos
+r = registros[0]
+print(r["data_venda"], "->", r["ano"], r["mes"], r["dia"], r["hora"], r["data_br"], r["ano_mes"])
+
+# peça 10: hipótese "todo pedido sem data_entrega é Cancelado"
+sem_entrega_cancelado = 0
+sem_entrega_outros = 0
+exemplos = []    # contraexemplos: sem entrega e NÃO cancelados
+
+for registro in registros:
+    if registro["data_entrega"].strip() == "":
+        if registro["status_pedido"] == "Cancelado":
+            sem_entrega_cancelado += 1
+        else:
+            sem_entrega_outros += 1
+            exemplos.append((registro["pedido_id"], registro["status_pedido"], registro["data_venda"]))
+
+# "todos" cai com um único contraexemplo
+hipotese_verdadeira = sem_entrega_outros == 0
+
+print("sem entrega:", sem_entrega_cancelado + sem_entrega_outros)    # alvo: 143
+print("cancelados:", sem_entrega_cancelado, "outros:", sem_entrega_outros)    # alvo: 109 e 34
+print("hipótese verdadeira?", hipotese_verdadeira)    # alvo: False
+print("1º contraexemplo:", exemplos[0])    # alvo: ('1170', 'Concluído', '2025-08-19 22:20:19')
+
+# peça 11: pedidos por canal (só canal reconhecido; todos os status entram)
+por_canal = {}
+excluidos_canal = 0
+
+for registro in registros:
+    canal = registro["canal_venda"]
+    if canal in tradutor.values():    # "Mercado", "Loja física", "Web"
+        if canal not in por_canal:
+            por_canal[canal] = 0
+        por_canal[canal] += 1
+    else:
+        excluidos_canal += 1
+
+total = sum(por_canal.values())
+for canal in por_canal:
+    n = por_canal[canal]
+    print(f"{canal}: {n} pedidos ({n / total * 100:.1f}%)")
+print("excluídos por canal desconhecido:", excluidos_canal)
+# alvo: Web 666 (44.4%), Loja física 551 (36.7%), Mercado 283 (18.9%), 0 excluídos
+
+# peça 12: pedidos por ano-mês (nunca só por mês: misturaria 2024 e 2025)
+por_ano_mes = {}
+excluidos_data = 0
+
+for registro in registros:
+    if registro["data_ok"]:
+        chave = registro["ano_mes"]
+        if chave not in por_ano_mes:
+            por_ano_mes[chave] = 0
+        por_ano_mes[chave] += 1
+    else:
+        excluidos_data += 1
+
+# "2024-08" < "2024-09" < ... : texto no formato ISO ordena como data
+for chave in sorted(por_ano_mes):
+    print(chave, por_ano_mes[chave])
+print("períodos:", len(por_ano_mes))    # alvo: 8
+print("excluídos por data inválida:", excluidos_data)    # alvo: 4
