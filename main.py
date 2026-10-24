@@ -167,3 +167,22 @@ for canal in por_canal:
     print(f"{canal}: {n} pedidos ({n / total * 100:.1f}%)")
 print("excluídos por canal desconhecido:", excluidos_canal)
 # alvo: Web 666 (44.4%), Loja física 551 (36.7%), Mercado 283 (18.9%), 0 excluídos
+
+# peça 12: pedidos por ano-mês (nunca só por mês: misturaria 2024 e 2025)
+por_ano_mes = {}
+excluidos_data = 0
+
+for registro in registros:
+    if registro["data_ok"]:
+        chave = registro["ano_mes"]
+        if chave not in por_ano_mes:
+            por_ano_mes[chave] = 0
+        por_ano_mes[chave] += 1
+    else:
+        excluidos_data += 1
+
+# "2024-08" < "2024-09" < ... : texto no formato ISO ordena como data
+for chave in sorted(por_ano_mes):
+    print(chave, por_ano_mes[chave])
+print("períodos:", len(por_ano_mes))    # alvo: 8
+print("excluídos por data inválida:", excluidos_data)    # alvo: 4
